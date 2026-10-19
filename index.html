@@ -192,7 +192,7 @@ header h1 em { font-style: italic; color: var(--accent); padding: 0 0.06em; }
 .sheet h2 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0; }
 .f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .f label, .f .lab { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-.f input[type="text"], .f input[type="number"], .f select, .f textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); min-height: 42px; }
+.f input[type="text"], .f input[type="number"], .f input[type="email"], .f input[type="password"], .f select, .f textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); min-height: 42px; }
 .f textarea { resize: vertical; min-height: 84px; }
 .two { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
 .checks { display: flex; flex-wrap: wrap; gap: 8px 16px; }
@@ -246,7 +246,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
 .notice, .empty.panel { border-radius: 20px; }
 .sheet { border-radius: 30px 30px 0 0; padding: 22px 20px; }
 @media (min-width: 700px) { .sheet { border-radius: 30px; } }
-.f input[type="text"], .f input[type="number"], .f select, .f textarea { border-radius: 16px; border-color: var(--line); background: var(--sunk); padding: 10px 14px; }
+.f input[type="text"], .f input[type="number"], .f input[type="email"], .f input[type="password"], .f select, .f textarea { border-radius: 16px; border-color: var(--line); background: var(--sunk); padding: 10px 14px; }
 .sheet h2 { font-size: 32px; }
 .toast { border-radius: 99px; padding: 10px 20px; }
 
@@ -375,6 +375,15 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
 .check .tick { position: absolute; left: 9px; top: 4px; width: 7px; height: 13px; border-right: 2.5px solid var(--on-accent); border-bottom: 2.5px solid var(--on-accent); transform: rotate(45deg) scale(0); transition: transform .22s cubic-bezier(.34, 1.45, .5, 1); }
 .check.on .tick { transform: rotate(45deg) scale(1); }
 @media (max-width: 480px) { .b-hero { padding: 20px 18px 8px; } .prog, .b-verdict { padding-left: 18px; padding-right: 18px; } .b-item, .sec-head { padding-left: 16px; padding-right: 16px; } .seg.big button { padding: 0 24px; } }
+
+/* Cloud-Status */
+.modes { gap: 12px; flex-wrap: wrap; align-items: center; }
+.sync { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--surface); box-shadow: var(--soft); font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--open); }
+.sync[data-k="ok"]::before { background: var(--yes); }
+.sync[data-k="warn"]::before { background: var(--no); }
+.sync[data-k="local"]::before { background: var(--kid); }
+.sync:not(:disabled) { cursor: pointer; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -387,7 +396,8 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   <div class="modes"><div class="seg big" role="group" aria-label="Bereich">
     <button type="button" id="m-gaeste" aria-pressed="true">Gäste</button>
     <button type="button" id="m-budget" aria-pressed="false">Budget</button>
-  </div></div>
+  </div>
+  <button type="button" class="sync" id="sync" hidden disabled></button></div>
   <div id="notice" class="notice" hidden></div>
   <div class="view" id="gaeste-view">
   <section class="panel stats" id="stats" aria-label="Zahlen"></section>
@@ -972,16 +982,13 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   render();
 
 
-  /* ---------- Lokaler Speicher (Browser) ---------- */
-  var SEED = {"guests": {"g01": {"access": ["Trauzeuge"], "child": false, "city": "Holderbank", "invited": false, "name": "Kevin Frei", "no": false, "note": "", "order": 1, "phone": "079 298 72 55", "plus": 0, "street": "Fabrikweg 294", "yes": false, "zip": "4718"}, "g02": {"access": ["Trauzeuge"], "child": false, "city": "Lupsingen", "invited": false, "name": "Cheryl Bernhard", "no": false, "note": "Schwester von Vanessa", "order": 2, "phone": "078 311 38 60", "plus": 0, "street": "Bündtenstrasse 1", "yes": false, "zip": "4419"}, "g03": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bottmingen", "invited": false, "name": "Daniel Handloser", "no": false, "note": "", "order": 3, "phone": "", "plus": 0, "street": "Beudenstrasse 11", "yes": false, "zip": "4103"}, "g04": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bottmingen", "invited": false, "name": "Isabell Handloser", "no": false, "note": "Gotti von Nicola", "order": 4, "phone": "077 510 99 69", "plus": 0, "street": "Beudenstrasse 11", "yes": false, "zip": "4103"}, "g05": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Muttenz", "invited": false, "name": "Gioiana Jundt", "no": false, "note": "Schwester von Nicola", "order": 5, "phone": "078 841 95 78", "plus": 0, "street": "Hofackerstrasse 12", "yes": false, "zip": "4132"}, "g06": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Muttenz", "invited": false, "name": "Jonathan", "no": false, "note": "Freund von Gioiana", "order": 6, "phone": "079 194 10 79", "plus": 0, "street": "Hofackerstrasse 12", "yes": false, "zip": "4132"}, "g07": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bretzwil", "invited": false, "name": "Petra", "no": false, "note": "Freundin von Philipp Ersahm", "order": 7, "phone": "", "plus": 0, "street": "Flumattweg 38", "yes": false, "zip": "4207"}, "g08": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bretzwil", "invited": false, "name": "Philipp Ersahm", "no": false, "note": "Götti von Nicola", "order": 8, "phone": "079 773 33 31", "plus": 0, "street": "Flumattweg 38", "yes": false, "zip": "4207"}, "g09": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bubendorf", "invited": false, "name": "Beatrice Jundt", "no": false, "note": "Mutter von Nicola", "order": 9, "phone": "079 758 83 69", "plus": 0, "street": "Breitenstrasse 9", "yes": false, "zip": "4416"}, "g10": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bubendorf", "invited": false, "name": "Roland Jundt", "no": false, "note": "Vater von Nicola", "order": 10, "phone": "079 320 64 32", "plus": 0, "street": "Breitenstrasse 9", "yes": false, "zip": "4416"}, "g11": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bubendorf", "invited": false, "name": "Lynn Bürgermeier", "no": false, "note": "Kollege von Nicola und Vanessa", "order": 11, "phone": "079 694 39 99", "plus": 0, "street": "Buchenstrasse 6", "yes": false, "zip": "4416"}, "g12": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Bubendorf", "invited": false, "name": "Marcus Schenk", "no": false, "note": "Vater von Vanessa", "order": 12, "phone": "", "plus": 0, "street": "Hauptstrasse 127", "yes": false, "zip": "4416"}, "g13": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Lupsingen", "invited": false, "name": "Moco Bernhard", "no": false, "note": "Mann von Cheryl", "order": 13, "phone": "079 824 92 98", "plus": 0, "street": "Bündtenstrasse 1", "yes": false, "zip": "4419"}, "g14": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Oberdorf", "invited": false, "name": "Martin Althaus", "no": false, "note": "Fotograph", "order": 14, "phone": "079 370 38 58", "plus": 0, "street": "Talweg 7", "yes": false, "zip": "4436"}, "g15": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Tenniken", "invited": false, "name": "Dave", "no": false, "note": "Anfragen mit NJ und VS besprechen. Stiefvater von Vanessa", "order": 15, "phone": "", "plus": 0, "street": "Schlossgasse 11", "yes": false, "zip": "4456"}, "g16": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Tenniken", "invited": false, "name": "Eveline", "no": false, "note": "Anfragen mit NJ und VS besprechen. Mutter von Vanessa", "order": 16, "phone": "", "plus": 0, "street": "Schlossgasse 11", "yes": false, "zip": "4456"}, "g17": {"access": ["Standesamt", "Apero", "Essen"], "child": false, "city": "Tenniken", "invited": false, "name": "Jason", "no": false, "note": "Anfragen mit NJ und VS besprechen. Halbbruder von Vanessa", "order": 17, "phone": "", "plus": 0, "street": "Schlossgasse 11", "yes": false, "zip": "4456"}, "g18": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Luca", "no": false, "note": "VS gibt Einladung persönlich", "order": 18, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g19": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Paulina", "no": false, "note": "VS gibt Einladung persönlich", "order": 19, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g20": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Anik", "no": false, "note": "VS gibt Einladung persönlich. Arbeitskollegin von Vanessa", "order": 20, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g21": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Frank", "no": false, "note": "VS gibt Einladung persönlich", "order": 21, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g22": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Luca (mit Marie)", "no": false, "note": "VS gibt Einladung persönlich. Luca +1 Marie", "order": 22, "phone": "", "plus": 1, "street": "", "yes": false, "zip": ""}, "g23": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Melina", "no": false, "note": "VS gibt Einladung persönlich", "order": 23, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g24": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Natalie", "no": false, "note": "VS gibt Einladung persönlich", "order": 24, "phone": "", "plus": 0, "street": "", "yes": false, "zip": ""}, "g25": {"access": ["Apero", "Essen"], "child": false, "city": "Allschwil", "invited": false, "name": "Diez", "no": false, "note": "", "order": 25, "phone": "", "plus": 0, "street": "Lilienstrasse 33", "yes": false, "zip": "4123"}, "g26": {"access": ["Apero", "Essen"], "child": false, "city": "Hochwald", "invited": false, "name": "Florian", "no": false, "note": "Freund von Sarah Handloser", "order": 26, "phone": "", "plus": 0, "street": "Seewenweg 41", "yes": false, "zip": "4146"}, "g27": {"access": ["Apero", "Essen"], "child": false, "city": "Hochwald", "invited": false, "name": "Sarah Handloser", "no": false, "note": "Cousine von Nicola", "order": 27, "phone": "077 403 92 68", "plus": 0, "street": "Seewenweg 41", "yes": false, "zip": "4146"}, "g28": {"access": ["Apero", "Essen"], "child": false, "city": "Liestal", "invited": false, "name": "Melanie Tanner evt 4.", "no": false, "note": "", "order": 28, "phone": "", "plus": 0, "street": "Burgstrasse 20a", "yes": false, "zip": "4410"}, "g29": {"access": ["Apero", "Essen"], "child": false, "city": "Liestal", "invited": false, "name": "Angelo Miracco", "no": false, "note": "", "order": 29, "phone": "", "plus": 0, "street": "Galmsstrasse 1A", "yes": false, "zip": "4410"}, "g30": {"access": ["Apero", "Essen"], "child": false, "city": "Liestal", "invited": false, "name": "Lia Rüeger", "no": false, "note": "", "order": 30, "phone": "", "plus": 0, "street": "Galmsstrasse 1A", "yes": false, "zip": "4410"}, "g31": {"access": ["Apero", "Essen"], "child": false, "city": "Liestal", "invited": false, "name": "Kevin Mandler", "no": false, "note": "", "order": 31, "phone": "", "plus": 0, "street": "Rathausstrasse 69", "yes": false, "zip": "4410"}, "g32": {"access": ["Apero", "Essen"], "child": true, "city": "Ziefen", "invited": false, "name": "Andrin", "no": false, "note": "Kind von Nicole", "order": 32, "phone": "", "plus": 0, "street": "Hauptstrasse 56", "yes": false, "zip": "4417"}, "g33": {"access": ["Apero", "Essen"], "child": false, "city": "Ziefen", "invited": false, "name": "Nicole", "no": false, "note": "Nachbar von Nicola und Vanessa", "order": 33, "phone": "079 263 02 99", "plus": 0, "street": "Hauptstrasse 56", "yes": false, "zip": "4417"}, "g34": {"access": ["Apero", "Essen"], "child": true, "city": "Ziefen", "invited": false, "name": "Simea", "no": false, "note": "Kind von Nicole", "order": 34, "phone": "", "plus": 0, "street": "Hauptstrasse 56", "yes": false, "zip": "4417"}, "g35": {"access": ["Apero", "Essen"], "child": false, "city": "Lampenberg", "invited": false, "name": "Emanuel Jost", "no": false, "note": "Kollege von Nicola", "order": 35, "phone": "079 661 25 43", "plus": 0, "street": "Hollenweg 11", "yes": false, "zip": "4432"}, "g36": {"access": ["Apero", "Essen"], "child": false, "city": "Niederdorf", "invited": false, "name": "Sabrina", "no": false, "note": "", "order": 36, "phone": "", "plus": 0, "street": "Burhaldenweg 1a", "yes": false, "zip": "4435"}, "g37": {"access": ["Apero", "Essen"], "child": false, "city": "Niederdorf", "invited": false, "name": "Alex Beck", "no": false, "note": "Kollege von Nicola", "order": 37, "phone": "", "plus": 0, "street": "im Weidenacker 2", "yes": false, "zip": "4435"}, "g38": {"access": ["Apero", "Essen"], "child": false, "city": "Niederdorf", "invited": false, "name": "Lea Beck", "no": false, "note": "Frau von Alex Beck", "order": 38, "phone": "", "plus": 0, "street": "im Weidenacker 2", "yes": false, "zip": "4435"}, "g39": {"access": ["Apero", "Essen"], "child": false, "city": "Rümlingen", "invited": false, "name": "Frau von Philipp Lägeler", "no": false, "note": "Frau von Philipp Lägeler", "order": 39, "phone": "", "plus": 0, "street": "Hohrainweg 103", "yes": false, "zip": "4444"}, "g40": {"access": ["Apero", "Essen"], "child": false, "city": "Rümlingen", "invited": false, "name": "Philipp Lägeler", "no": false, "note": "Kollege von Nicola", "order": 40, "phone": "", "plus": 0, "street": "Hohrainweg 103", "yes": false, "zip": "4444"}, "g41": {"access": ["Apero", "Essen"], "child": false, "city": "Gelterkinden", "invited": false, "name": "Sarah Meyer", "no": false, "note": "", "order": 41, "phone": "", "plus": 0, "street": "Gansacherweg 15", "yes": false, "zip": "4460"}, "g42": {"access": ["Apero", "Essen"], "child": false, "city": "Holderbank", "invited": false, "name": "Delia Frei", "no": false, "note": "Frau von Kevin", "order": 42, "phone": "077 403 01 05", "plus": 0, "street": "Fabrikweg 294", "yes": false, "zip": "4718"}, "g43": {"access": ["Apero", "Essen"], "child": false, "city": "", "invited": false, "name": "Elia Heid", "no": false, "note": "Kollege von Nicola. Adresse fehlt", "order": 43, "phone": "079 179 29 74", "plus": 0, "street": "", "yes": false, "zip": ""}}, "budget": {"b01": {"name": "Lokation", "planned": 14000, "actual": 0, "type": "cost", "order": 1}, "b02": {"name": "Save the Date Karten", "planned": 11.5, "actual": 11.5, "type": "cost", "order": 2}, "b03": {"name": "Einladungskarten", "planned": 150, "actual": 150, "type": "cost", "order": 3}, "b04": {"name": "Einladungskarten Zubehör", "planned": 130, "actual": 130, "type": "cost", "order": 4}, "b05": {"name": "Briefmarken", "planned": 30, "actual": 0, "type": "cost", "order": 5}, "b06": {"name": "Ringe", "planned": 5280, "actual": 5280, "type": "cost", "order": 6}, "b07": {"name": "Niederlassungsbescheinigung", "planned": 40, "actual": 40, "type": "cost", "order": 7}, "b08": {"name": "Geburtsurkunde", "planned": 62.4, "actual": 62.4, "type": "cost", "order": 8}, "b09": {"name": "Trauung", "planned": 175, "actual": 175, "type": "cost", "order": 9}, "b10": {"name": "Anzug", "planned": 1000, "actual": 0, "type": "cost", "order": 10}, "b11": {"name": "Kleid", "planned": 2500, "actual": 0, "type": "cost", "order": 11}, "b12": {"name": "Make-up", "planned": 420, "actual": 0, "type": "cost", "order": 12}, "b13": {"name": "Coiffure und Nägel", "planned": 350, "actual": 0, "type": "cost", "order": 13}, "b14": {"name": "Saxophonspieler", "planned": 340, "actual": 0, "type": "cost", "order": 14}, "b15": {"name": "Blumen", "planned": 800, "actual": 0, "type": "cost", "order": 15}, "b16": {"name": "Gastgeschenke", "planned": 700, "actual": 0, "type": "cost", "order": 16}, "b17": {"name": "Torte", "planned": 500, "actual": 0, "type": "cost", "order": 17}, "b18": {"name": "Fotograph mit Album", "planned": 1800, "actual": 1800, "type": "cost", "order": 18}, "b19": {"name": "Filme für Instax-Kamera", "planned": 100, "actual": 0, "type": "cost", "order": 19}, "b20": {"name": "Hochzeitsreise", "planned": 3980, "actual": 0, "type": "cost", "order": 20}, "b21": {"name": "Hochzeitsreise vor Ort", "planned": 1000, "actual": 0, "type": "cost", "order": 21}, "b22": {"name": "Schenkung", "planned": 10000, "actual": 10000, "type": "income", "order": 22}}, "settings": {"budget": {"hochzeit": 26000, "gesamt": 30980}}};
+  /* ---------- Lokaler Speicher (nur Notfall ohne Cloud) ---------- */
+  var LOCAL_KEY = 'gaesteliste-nicola-vanessa-v1';
   function makeLocalDb() {
-    var KEY = 'gaesteliste-nicola-vanessa-v1', data = null, subs = { guests: [], notes: [], budget: [], settings: [] };
+    var KEY = LOCAL_KEY, data = null, subs = { guests: [], notes: [], budget: [], settings: [] };
     try { var raw = localStorage.getItem(KEY); if (raw) data = JSON.parse(raw); } catch (e) {}
-    var fresh = JSON.parse(JSON.stringify(SEED));
-    if (!data || !data.guests) data = { guests: fresh.guests, notes: {} };
-    if (!data.notes) data.notes = {};
-    if (!data.budget) data.budget = fresh.budget;
-    if (!data.settings) data.settings = fresh.settings;
+    if (!data) data = {};
+    ['guests', 'notes', 'budget', 'settings'].forEach(function (c) { if (!data[c]) data[c] = {}; });
     function persist() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
     function snap(c) {
       var ids = Object.keys(data[c]).sort();
@@ -1002,23 +1009,142 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     }
     return { collection: coll, doc: function (path) { var p = path.split('/'); return coll(p[0]).doc(p[1]); } };
   }
+
+  /* ---------- Firebase (Cloud-Speicher, Anmeldung, Rollen) ---------- */
+  var FB_CONFIG = {
+    apiKey: "AIzaSyDnNQPXPoEKZ3nh8bqJT3We4w_UdDKbgDo",
+    authDomain: "wedding-7176e.firebaseapp.com",
+    projectId: "wedding-7176e",
+    storageBucket: "wedding-7176e.firebasestorage.app",
+    messagingSenderId: "4899299305",
+    appId: "1:4899299305:web:7234ccd5c0b3a41c817578",
+    measurementId: "G-9SZG1X6CGK"
+  };
+  var FB_BASE = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  var MAIL_DOMAIN = '@gaesteliste.invalid';
+  var ADMINS = ['nicola' + MAIL_DOMAIN, 'vanessa' + MAIL_DOMAIN];
+  var fs = null, cloud = false, authUser = null, unsubs = [];
+  var syncEl = document.getElementById('sync');
+  function isAdmin() { return !cloud || !!(authUser && ADMINS.indexOf(String(authUser.email || '').toLowerCase()) > -1); }
+  function niceName() { var n = String((authUser && authUser.email) || '').split('@')[0]; return n.charAt(0).toUpperCase() + n.slice(1); }
+  function setSync(kind, text, onclick) {
+    syncEl.hidden = false; syncEl.setAttribute('data-k', kind); syncEl.textContent = text;
+    syncEl.onclick = onclick || null; syncEl.disabled = !onclick;
+  }
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      var el = document.createElement('script'); el.src = src; el.async = false;
+      var t = setTimeout(function () { rej(new Error('timeout')); }, 10000);
+      el.onload = function () { clearTimeout(t); res(); };
+      el.onerror = function () { clearTimeout(t); rej(new Error('load')); };
+      document.head.appendChild(el);
+    });
+  }
+  function denied(e) { return !!e && (e.code === 'permission-denied' || e.code === 'unauthenticated'); }
+  function stopAll() { unsubs.forEach(function (f) { try { f(); } catch (e) {} }); unsubs = []; }
+  function toMail(name) { var n = String(name || '').trim().toLowerCase(); return n.indexOf('@') > -1 ? n : n + MAIL_DOMAIN; }
+  function authMsg(e) {
+    var c = (e && e.code) || '';
+    if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-email') return 'Benutzername oder Passwort stimmt nicht.';
+    if (c === 'auth/too-many-requests') return 'Zu viele Versuche. Bitte später erneut versuchen.';
+    if (c === 'auth/operation-not-allowed') return 'Die Anmeldung mit E-Mail und Passwort ist in Firebase noch nicht aktiviert.';
+    if (c === 'auth/network-request-failed') return 'Keine Verbindung zum Internet.';
+    return 'Anmeldung nicht möglich (' + (c || 'unbekannt') + ').';
+  }
+  function applyRole() {
+    var admin = isAdmin(), sw = document.querySelector('.seg.big');
+    if (sw) sw.hidden = !admin;
+    if (!admin && mode !== 'gaeste') setMode('gaeste', false);
+  }
+  function openLogin() {
+    if (document.getElementById('l-user')) return;
+    var user = h('input', { type: 'text', id: 'l-user', autocomplete: 'username', autocapitalize: 'none', spellcheck: 'false', placeholder: 'z. B. Nicola' });
+    var pw = h('input', { type: 'password', id: 'l-pw', autocomplete: 'current-password' });
+    var err = h('div', { class: 'err', role: 'alert' });
+    var sheet = h('form', { class: 'sheet', onsubmit: function (e) {
+      e.preventDefault(); err.textContent = '';
+      firebase.auth().signInWithEmailAndPassword(toMail(user.value), pw.value).then(function () { closeSheet(); }, function (ex) { err.textContent = authMsg(ex); });
+    } },
+      h('h2', { text: 'Anmelden' }),
+      h('p', { class: 'hint', text: 'Die Gästeliste ist geschützt. Bitte mit Benutzername und Passwort anmelden.' }),
+      fld('l-user', 'Benutzername', user), fld('l-pw', 'Passwort', pw), err,
+      h('div', { class: 'actions' },
+        h('button', { type: 'button', class: 'btn', onclick: closeSheet, text: 'Später' }),
+        h('button', { type: 'submit', class: 'btn primary', text: 'Anmelden' })));
+    openSheet(sheet, {});
+  }
+  function needLogin() {
+    stopAll();
+    guests = []; notes = {}; budget = []; cfg = { hochzeit: 0, gesamt: 0 };
+    applyRole();
+    setSync('warn', 'Nicht angemeldet', openLogin);
+    fail('Bitte anmelden, um die Gästeliste zu sehen.');
+    openLogin();
+  }
+  function signOutTwoStep() {
+    if (!syncEl.getAttribute('data-armed')) {
+      syncEl.setAttribute('data-armed', '1'); var old = syncEl.textContent; syncEl.textContent = 'Abmelden?';
+      setTimeout(function () { if (syncEl.getAttribute('data-armed')) { syncEl.removeAttribute('data-armed'); syncEl.textContent = old; } }, 3500);
+      return;
+    }
+    syncEl.removeAttribute('data-armed'); firebase.auth().signOut();
+  }
+  function onErr(e) {
+    if (denied(e)) {
+      if (authUser) { setSync('warn', 'Kein Zugriff', signOutTwoStep); fail('Kein Zugriff. Die Firestore-Regeln erlauben diesem Benutzer den Zugriff nicht.'); }
+      else needLogin();
+      return;
+    }
+    var msg = String((e && (e.message || e.code)) || '');
+    if (e && e.code === 'unavailable') return;
+    setSync('warn', 'Keine Verbindung', authUser ? signOutTwoStep : null);
+    if (/does not exist|not-found/i.test(msg)) fail('Die Firestore-Datenbank ist noch nicht erstellt. In der Firebase-Konsole unter «Firestore Database» auf «Datenbank erstellen» klicken.');
+    else fail('Die Cloud-Verbindung ist fehlgeschlagen (' + ((e && e.code) || 'unbekannt') + ').');
+  }
+  function connect() {
+    stopAll();
+    unsubs.push(fs.collection('notes').onSnapshot(onNotes, onErr));
+    unsubs.push(fs.collection('guests').onSnapshot(onGuests, onErr));
+    if (isAdmin()) {
+      unsubs.push(fs.collection('budget').onSnapshot(onBudget, onErr));
+      unsubs.push(fs.collection('settings').onSnapshot(onSettings, onErr));
+    }
+    document.getElementById('notice').hidden = true;
+    setSync('ok', 'Cloud · ' + niceName() + (isAdmin() ? ' · Admin' : ''), signOutTwoStep);
+  }
+  function startCloud() {
+    return loadScript(FB_BASE + 'firebase-app-compat.js')
+      .then(function () { return loadScript(FB_BASE + 'firebase-firestore-compat.js'); })
+      .then(function () { return loadScript(FB_BASE + 'firebase-auth-compat.js'); })
+      .then(function () {
+        firebase.initializeApp(FB_CONFIG);
+        fs = firebase.firestore();
+        return fs.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+      })
+      .then(function () {
+        cloud = true; db = fs;
+        setSync('busy', 'Verbinde …');
+        firebase.auth().onAuthStateChanged(function (u) {
+          authUser = u;
+          if (u) { applyRole(); connect(); } else { needLogin(); }
+        });
+        return true;
+      }, function () { return false; });
+  }
   function fail(msg) { var n = document.getElementById('notice'); n.textContent = msg; n.hidden = false; loaded = true; bLoaded = true; render(); }
-  db = makeLocalDb();
-  db.collection('notes').onSnapshot(function (snap) {
-    notes = {}; snap.docs.forEach(function (d) { var t = (d.data() || {}).text; if (t) notes[d.id] = t; });
-    if (loaded) render();
-  });
-  db.collection('guests').onSnapshot(function (snap) {
-    guests = snap.docs.map(function (d) { var o = d.data() || {}; o.id = d.id; return o; });
-    loaded = true; render();
-  });
-  db.collection('budget').onSnapshot(function (snap) {
-    budget = snap.docs.map(function (d) { var o = d.data() || {}; o.id = d.id; return o; });
-    bLoaded = true; render();
-  });
-  db.collection('settings').onSnapshot(function (snap) {
-    snap.docs.forEach(function (d) { if (d.id === 'budget') { var o = d.data() || {}; cfg = { hochzeit: Number(o.hochzeit) || 0, gesamt: Number(o.gesamt) || 0 }; } });
-    render();
+  function skipCache(snap) { return !!(snap.metadata && snap.metadata.fromCache && snap.empty); }
+  function onNotes(snap) { notes = {}; snap.docs.forEach(function (d) { var t = (d.data() || {}).text; if (t) notes[d.id] = t; }); if (loaded) render(); }
+  function onGuests(snap) { if (skipCache(snap)) return; guests = snap.docs.map(function (d) { var o = d.data() || {}; o.id = d.id; return o; }); loaded = true; render(); }
+  function onBudget(snap) { if (skipCache(snap)) return; budget = snap.docs.map(function (d) { var o = d.data() || {}; o.id = d.id; return o; }); bLoaded = true; render(); }
+  function onSettings(snap) { snap.docs.forEach(function (d) { if (d.id === 'budget') { var o = d.data() || {}; cfg = { hochzeit: Number(o.hochzeit) || 0, gesamt: Number(o.gesamt) || 0 }; } }); render(); }
+  startCloud().then(function (ok) {
+    if (ok) return;
+    db = makeLocalDb();
+    db.collection('notes').onSnapshot(onNotes);
+    db.collection('guests').onSnapshot(onGuests);
+    db.collection('budget').onSnapshot(onBudget);
+    db.collection('settings').onSnapshot(onSettings);
+    setSync('local', 'Nur auf diesem Gerät');
   });
 })();
 </script>
