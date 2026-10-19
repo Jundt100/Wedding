@@ -384,6 +384,15 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
 .sync[data-k="warn"]::before { background: var(--no); }
 .sync[data-k="local"]::before { background: var(--kid); }
 .sync:not(:disabled) { cursor: pointer; color: var(--ink); }
+.ro #add, .ro .edit-link, .ro .note-add { display: none; }
+.ro .st { pointer-events: none; }
+.ro .note-box { pointer-events: none; }
+.l-item { display: grid; grid-template-columns: 110px 90px 1fr; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--line); align-items: baseline; }
+.l-item:first-child { border-top: 0; }
+.l-t { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.l-u { font-weight: 600; }
+@media (max-width: 560px) { .l-item { grid-template-columns: 1fr; gap: 2px; } }
+#log-list { display: flex; flex-direction: column; gap: 12px; }
 </style>
 </head>
 <body>
@@ -396,6 +405,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   <div class="modes"><div class="seg big" role="group" aria-label="Bereich">
     <button type="button" id="m-gaeste" aria-pressed="true">Gäste</button>
     <button type="button" id="m-budget" aria-pressed="false">Budget</button>
+    <button type="button" id="m-log" aria-pressed="false" hidden>Verlauf</button>
   </div>
   <button type="button" class="sync" id="sync" hidden disabled></button></div>
   <div id="notice" class="notice" hidden></div>
@@ -422,6 +432,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     <main id="b-list"></main>
   </div>
 </div>
+<div class="view" id="log-view" hidden><div class="bar"><p class="hint">Alle Änderungen, neueste zuerst. Nur für dich sichtbar.</p></div><main id="log-list"></main></div>
 <div id="layer"></div>
 
 <script>
@@ -467,6 +478,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
 
   var chain = {};
   function write(id, fn) {
+    if (window.__ro) { toast('Nur Leserechte.'); return Promise.resolve(); }
     chain[id] = (chain[id] || Promise.resolve()).then(fn).catch(function () { toast('Speichern hat nicht geklappt.'); });
     return chain[id];
   }
@@ -528,7 +540,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   function statusBtn(g) {
     var s0 = stateOf(g);
     return h('button', { type: 'button', class: 'st', 'data-k': s0, title: 'Tippen zum Weiterschalten', text: STATE_LABEL[s0],
-      onclick: function () { write(g.id, function () { return db.collection('guests').doc(g.id).update(STATE_PATCH[STATE_NEXT[s0]]); }); } });
+      onclick: function () { logChange(g.name + ': ' + STATE_LABEL[s0] + ' → ' + STATE_LABEL[STATE_NEXT[s0]]); write(g.id, function () { return db.collection('guests').doc(g.id).update(STATE_PATCH[STATE_NEXT[s0]]); }); } });
   }
   function detailRow(g) {
     var acc = (g.access || []).length ? g.access.join(', ') : 'nichts ausgewählt';
@@ -689,10 +701,12 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && layer.firstChild) closeSheet(); });
 
   function openNote(key, title, fromPopup) {
+    if (window.__ro) return;
     var ta = h('textarea', { id: 'n-text', rows: '4', value: notes[key] || '', placeholder: 'z. B. Sitzplatz, Unterkunft, Einladung mit der Post …' });
     var sheet = h('form', { class: 'sheet', onsubmit: function (e) {
       e.preventDefault();
       var t = ta.value.trim();
+      logChange('Bemerkung «' + title + '»: ' + (t || '(gelöscht)'));
       write('note-' + key, function () { return t ? db.doc('notes/' + key).set({ text: t }) : db.doc('notes/' + key).delete(); });
       closeSheet();
     } },
@@ -705,6 +719,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   }
 
   function openGuest(g, fromPopup) {
+    if (window.__ro) return;
     var isNew = !g;
     var cur = g || { name: '', street: '', zip: '', city: '', phone: '', access: ['Standesamt', 'Apero', 'Essen'], note: '', child: false, plus: 0 };
     function field(id, label, input) { return h('div', { class: 'f' }, h('label', { for: id, text: label }), input); }
@@ -741,6 +756,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
           setTimeout(function () { if (del.isConnected) { del.classList.remove('armed'); del.textContent = 'Löschen'; } }, 4000);
           return;
         }
+        logChange('Gast gelöscht: ' + g.name);
         write(g.id, function () { return db.collection('guests').doc(g.id).delete(); });
         closeSheet(); toast(g.name + ' gelöscht.');
       }, text: 'Löschen' });
@@ -756,6 +772,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
         invited: !!base.invited, yes: !!base.yes, no: !!base.no, order: base.order || 0
       };
       var id = isNew ? 'g' + Date.now().toString(36) : g.id;
+      logChange(isNew ? 'Gast hinzugefügt: ' + obj.name : 'Gast geändert: ' + obj.name + diffText(g, obj));
       write(id, function () { return db.collection('guests').doc(id).set(obj); });
       closeSheet(); toast(isNew ? obj.name + ' hinzugefügt.' : 'Gespeichert.');
     } },
@@ -815,6 +832,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   }
   function bToggle(b) {
     var st = bState(b), next = (st === 'paid' || st === 'over') ? 0 : (Number(b.planned) || 0);
+    logChange('Budget: ' + b.name + (next ? ' bezahlt' : ' wieder offen'));
     write('b-' + b.id, function () { return db.collection('budget').doc(b.id).update({ actual: next }); });
   }
   function isDone(b) { var st = bState(b); return st === 'paid' || st === 'over'; }
@@ -884,6 +902,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   }
   function fld(id, label, input) { return h('div', { class: 'f' }, h('label', { for: id, text: label }), input); }
   function openBudget(b) {
+    if (window.__ro) return;
     var isNew = !b;
     var cur = b || { name: '', planned: 0, actual: 0, type: 'cost' };
     var name = h('input', { type: 'text', id: 'b-name', value: cur.name, autocomplete: 'off' });
@@ -900,6 +919,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
           setTimeout(function () { if (del.isConnected) { del.classList.remove('armed'); del.textContent = 'Löschen'; } }, 4000);
           return;
         }
+        logChange('Budgetposten gelöscht: ' + b.name);
         write('b-' + b.id, function () { return db.collection('budget').doc(b.id).delete(); });
         closeSheet(); toast(b.name + ' gelöscht.');
       }, text: 'Löschen' });
@@ -910,6 +930,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
       var id = isNew ? 'b' + Date.now().toString(36) : b.id;
       var obj = { name: name.value.trim(), type: type.value, planned: parseNum(plan.value), actual: parseNum(act.value),
         order: isNew ? budget.reduce(function (m, x) { return Math.max(m, x.order || 0); }, 0) + 1 : (b.order || 0) };
+      logChange(isNew ? 'Budgetposten hinzugefügt: ' + obj.name : 'Budgetposten geändert: ' + obj.name + diffText(b, obj));
       write('b-' + id, function () { return db.collection('budget').doc(id).set(obj); });
       closeSheet(); toast(isNew ? obj.name + ' hinzugefügt.' : 'Gespeichert.');
     } },
@@ -925,11 +946,13 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     openSheet(sheet, {});
   }
   function openBudgetSettings() {
+    if (window.__ro) return;
     var hz = h('input', { type: 'text', id: 's-hochzeit', value: numStr(cfg.hochzeit), inputmode: 'decimal', autocomplete: 'off' });
     var gs = h('input', { type: 'text', id: 's-gesamt', value: numStr(cfg.gesamt), inputmode: 'decimal', autocomplete: 'off' });
     var sheet = h('form', { class: 'sheet', onsubmit: function (e) {
       e.preventDefault();
       var o = { hochzeit: parseNum(hz.value), gesamt: parseNum(gs.value) };
+      logChange('Budget angepasst: Hochzeit ' + o.hochzeit + ', Gesamt ' + o.gesamt);
       write('settings', function () { return db.collection('settings').doc('budget').set(o); });
       closeSheet(); toast('Budget gespeichert.');
     } },
@@ -965,6 +988,7 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     mode = m;
     var g = document.getElementById('gaeste-view'), b = document.getElementById('budget-view');
     g.hidden = m !== 'gaeste'; b.hidden = m !== 'budget';
+    document.getElementById('log-view').hidden = true; document.getElementById('m-log').setAttribute('aria-pressed', 'false');
     document.getElementById('m-gaeste').setAttribute('aria-pressed', String(m === 'gaeste'));
     document.getElementById('m-budget').setAttribute('aria-pressed', String(m === 'budget'));
     document.getElementById('eyebrow').textContent = m === 'budget' ? 'Hochzeit · Budget' : 'Hochzeit · Gästeliste';
@@ -1023,6 +1047,8 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   var FB_BASE = 'https://www.gstatic.com/firebasejs/10.14.1/';
   var MAIL_DOMAIN = '@gaesteliste.invalid';
   var ADMINS = ['nicola' + MAIL_DOMAIN, 'vanessa' + MAIL_DOMAIN];
+  var SUPER = 'nicola' + MAIL_DOMAIN;
+  function isSuper() { return !!(authUser && String(authUser.email || '').toLowerCase() === SUPER); }
   var fs = null, cloud = false, authUser = null, unsubs = [];
   var syncEl = document.getElementById('sync');
   function isAdmin() { return !cloud || !!(authUser && ADMINS.indexOf(String(authUser.email || '').toLowerCase()) > -1); }
@@ -1051,9 +1077,41 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     if (c === 'auth/network-request-failed') return 'Keine Verbindung zum Internet.';
     return 'Anmeldung nicht möglich (' + (c || 'unbekannt') + ').';
   }
+  function diffText(a, b) {
+    var out = [];
+    Object.keys(b).forEach(function (k) {
+      if (k === 'order') return;
+      var x = JSON.stringify(a[k] === undefined ? '' : a[k]), y = JSON.stringify(b[k]);
+      if (x !== y) out.push(k + ': ' + String(a[k] === undefined || a[k] === '' ? '\u2013' : a[k]) + ' \u2192 ' + String(b[k] === '' ? '\u2013' : b[k]));
+    });
+    return out.length ? ' (' + out.join('; ') + ')' : '';
+  }
+  function logChange(text) {
+    if (!cloud || !fs || !authUser) return;
+    try { fs.collection('log').add({ t: Date.now(), u: niceName(), x: String(text).slice(0, 400) }).catch(function () {}); } catch (e) {}
+  }
+  function renderLog(snap) {
+    var rows = snap.docs.map(function (d) { return d.data() || {}; });
+    var box = document.getElementById('log-list');
+    put(box, [h('section', { class: 'panel' }, rows.length ? rows.map(function (r) {
+      return h('div', { class: 'l-item' },
+        h('span', { class: 'l-t', text: new Date(r.t).toLocaleString('de-CH', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) }),
+        h('span', { class: 'l-u', text: r.u || '' }),
+        h('span', { text: r.x || '' }));
+    }) : h('div', { class: 'l-item' }, h('span', { text: 'Noch keine \u00c4nderungen.' })))]);
+  }
+  document.getElementById('m-log').onclick = function () {
+    setMode('gaeste', false);
+    document.getElementById('gaeste-view').hidden = true;
+    document.getElementById('log-view').hidden = false;
+    document.getElementById('m-gaeste').setAttribute('aria-pressed', 'false');
+    document.getElementById('m-log').setAttribute('aria-pressed', 'true');
+  };
   function applyRole() {
     var admin = isAdmin(), sw = document.querySelector('.seg.big');
-    if (sw) sw.hidden = !admin;
+    window.__ro = !admin; document.body.classList.toggle('ro', !admin);
+    document.getElementById('m-log').hidden = !isSuper();
+    if (sw) sw.hidden = !(admin);
     if (!admin && mode !== 'gaeste') setMode('gaeste', false);
   }
   function openLogin() {
@@ -1105,12 +1163,13 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
     stopAll();
     unsubs.push(fs.collection('notes').onSnapshot(onNotes, onErr));
     unsubs.push(fs.collection('guests').onSnapshot(onGuests, onErr));
+    if (isSuper()) unsubs.push(fs.collection('log').orderBy('t', 'desc').limit(300).onSnapshot(renderLog, function () {}));
     if (isAdmin()) {
       unsubs.push(fs.collection('budget').onSnapshot(onBudget, onErr));
       unsubs.push(fs.collection('settings').onSnapshot(onSettings, onErr));
     }
     document.getElementById('notice').hidden = true;
-    setSync('ok', 'Cloud · ' + niceName() + (isAdmin() ? ' · Admin' : ''), signOutTwoStep);
+    setSync('ok', 'Cloud · ' + niceName() + (isSuper() ? ' · Admin+' : isAdmin() ? ' · Admin' : ' · nur lesen'), signOutTwoStep);
   }
   function startCloud() {
     return loadScript(FB_BASE + 'firebase-app-compat.js')
