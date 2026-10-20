@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <title>Gästeliste Nicola & Vanessa</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <style>
@@ -38,22 +38,8 @@
   --display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #101713; --surface: #18211C; --sunk: #202B25; --line: #2E3C34;
-    --ink: #E6EEE9; --muted: #97A99F; --accent: #7FC4A6; --on-accent: #0C1712;
-    --inv: #8DB4E2; --inv-bg: #22364D; --yes: #6CCB97; --yes-bg: #1D3A2B; --no: #F0897D; --no-bg: #432421; --open: #4A5A51;
-    --kid: #EBC474; --kid-bg: #3F3216; --note-bg: #352E1B; --note-ink: #E8D9A8; --shadow: 0 14px 36px rgba(0, 0, 0, 0.45); --soft: 0 1px 2px rgba(0,0,0,0.3); --veil: rgba(8, 12, 10, 0.45); --glass: rgba(30, 42, 36, 0.58); --glass-line: rgba(255, 255, 255, 0.14); --glass-field: rgba(255, 255, 255, 0.07); --glass-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #101713; --surface: #18211C; --sunk: #202B25; --line: #2E3C34;
-  --ink: #E6EEE9; --muted: #97A99F; --accent: #7FC4A6; --on-accent: #0C1712;
-  --inv: #8DB4E2; --inv-bg: #22364D; --yes: #6CCB97; --yes-bg: #1D3A2B; --no: #F0897D; --no-bg: #432421; --open: #4A5A51;
-  --kid: #EBC474; --kid-bg: #3F3216; --note-bg: #352E1B; --note-ink: #E8D9A8; --shadow: 0 14px 36px rgba(0, 0, 0, 0.45); --soft: 0 1px 2px rgba(0,0,0,0.3); --veil: rgba(8, 12, 10, 0.45); --glass: rgba(30, 42, 36, 0.58); --glass-line: rgba(255, 255, 255, 0.14); --glass-field: rgba(255, 255, 255, 0.07); --glass-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
-  color-scheme: dark;
-}
+
+
 * { box-sizing: border-box; }
 body {
   background: var(--bg);
@@ -429,22 +415,8 @@ header .eyebrow { font-weight: 500; letter-spacing: 0.22em; }
   --display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A1022; --surface: #131C38; --sunk: #1B2548; --line: #243056; --ink: #EAF0FF; --muted: #9AA8C9;
-    --accent: #3E78F2; --on-accent: #FFFFFF; --blue: #6F9BFF;
-    --inv: #8FB0FF; --inv-bg: #1E2F5E; --yes: #5ED69B; --yes-bg: #153A30; --no: #FF8A8A; --no-bg: #432026; --open: #38456B;
-    --kid: #FFCB54; --kid-bg: #3E3213; --note-bg: #3A3216; --note-ink: #F0DC9A;
-    --shadow: 0 26px 56px rgba(0, 0, 0, 0.5); --soft: 0 12px 30px rgba(0, 0, 0, 0.35); --veil: rgba(6, 10, 22, 0.5);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0A1022; --surface: #131C38; --sunk: #1B2548; --line: #243056; --ink: #EAF0FF; --muted: #9AA8C9;
-  --accent: #3E78F2; --on-accent: #FFFFFF; --blue: #6F9BFF;
-  --inv: #8FB0FF; --inv-bg: #1E2F5E; --yes: #5ED69B; --yes-bg: #153A30; --no: #FF8A8A; --no-bg: #432026; --open: #38456B;
-  --kid: #FFCB54; --kid-bg: #3E3213; --note-bg: #3A3216; --note-ink: #F0DC9A;
-  --shadow: 0 26px 56px rgba(0, 0, 0, 0.5); --soft: 0 12px 30px rgba(0, 0, 0, 0.35); --veil: rgba(6, 10, 22, 0.5);
-}
+
+
 body { background: var(--bg); font-weight: 500; letter-spacing: -0.005em; }
 header .eyebrow { font-weight: 700; letter-spacing: 0.2em; color: var(--muted); }
 header h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; font-size: clamp(36px, 8.5vw, 64px); line-height: 1.02; }
@@ -520,8 +492,8 @@ header h1 em { font-style: normal; color: var(--blue); }
   --grad: linear-gradient(135deg, #4A86F7 0%, #2E43E0 100%);
   --btn-glow: 0 10px 22px rgba(46, 67, 224, 0.30);
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: var(--bg); } }
-:root[data-theme="dark"] { --page: var(--bg); }
+
+
 body { background: var(--page); background-attachment: fixed; min-height: 100vh; }
 .big .first, .seg button[aria-pressed="true"], .chip[aria-pressed="true"], .btn.primary, .chev[aria-expanded="true"] { background: var(--grad); color: #fff; }
 .seg button[aria-pressed="true"], .chip[aria-pressed="true"], .btn.primary { box-shadow: var(--btn-glow); }
