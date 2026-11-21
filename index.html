@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title>Gästeliste Nicola & Vanessa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F6F4F1">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gästeliste">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <style>
 :root {
@@ -1841,6 +1849,15 @@ body { background: var(--page); background-attachment: fixed; min-height: 100vh;
     setSync('local', 'Nur auf diesem Gerät');
   });
 })();
+</script>
+
+<script>
+/* App-Installation: Service Worker nur über http(s), nicht beim Öffnen als Datei */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Service Worker nicht registriert:', e); });
+  });
+}
 </script>
 
 </body>
