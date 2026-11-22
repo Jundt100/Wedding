@@ -3,7 +3,7 @@
   "short_name": "Gästeliste",
   "description": "Gästeliste, Tischplan, Aufgaben und Wünsche für die Hochzeit von Nicola & Vanessa",
   "lang": "de",
-  "id": "/Wedding/",
+  "id": "/Wedding/gaesteliste-nicola-vanessa",
   "start_url": "/Wedding/",
   "scope": "/Wedding/",
   "display": "standalone",

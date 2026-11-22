@@ -3,7 +3,7 @@
    - Firebase-Bibliotheken und Schriften (feste Versionen): zuerst Cache.
    - Firestore/Anmeldung laufen nie über den Cache.
    Bei Änderungen an dieser Datei VERSION hochzählen. */
-var VERSION = 'v2';
+var VERSION = 'v3';
 var CACHE = 'gaesteliste-' + VERSION;
 var CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png', './favicon-32.png'];
 
